@@ -6,9 +6,9 @@ var area_list_link=null;
 var body_main=null;
 var id_device='';
 var btn_lang=null;
+var img_avatar=null;
 
 $(function () {
-
     body_main=document.querySelectorAll("#body_main");
     body_main=body_main[0];
     area_login=document.querySelectorAll("#login");
@@ -20,9 +20,8 @@ $(function () {
     btn_lang.addEventListener('click',function () {
         show_select_lang();
     });
-
-
     show_main();
+    load_img_lang();
 });
 
 function show_main(){
@@ -31,11 +30,17 @@ function show_main(){
     label_link.classList.add('label');
     label_link.classList.add('lang');
     label_link.setAttribute("val","app_title_tip");
+    var error_link=document.createElement("strong");
+    error_link.innerHTML="The link is malformed";
+    error_link.classList.add("lang");
+    error_link.classList.add('error');
+    error_link.setAttribute("val","link_error");
     var inp_link=document.createElement("input");
     inp_link.setAttribute("id","inp_link");
     inp_link.setAttribute("type","text");
     inp_link.setAttribute("placeholder","Enter link here...");
     inp_link.classList.add("inp");
+    inp_link.classList.add("pl");
     var btn_create_link=document.createElement("button");
     btn_create_link.innerHTML="Create shortened links";
     btn_create_link.classList.add("buttonPro");
@@ -45,21 +50,39 @@ function show_main(){
     btn_create_link.setAttribute("val","create_link_shortened");
     btn_create_link.addEventListener('click',function () {
         var inp_link=$("#inp_link").val();
-        chrome.storage.local.get({list_link: []}, function (result) {
-            var data_lik = result.list_link;
-            data_lik.push({'link': inp_link, HasBeenUploadedYet: false});
-            chrome.storage.local.set({list_link: data_lik}, function () {
-                console.log(result.list_link);
-                //show_list_link();
-                show_link_done();
-            });
-        });
+        if(isValidURL(inp_link)) {
+            if (id_device == "") {
+                chrome.storage.local.get({list_link: []}, function (result) {
+                    var data_lik = result.list_link;
+                    data_lik.push({'link': inp_link, HasBeenUploadedYet: false});
+                    chrome.storage.local.set({list_link: data_lik}, function () {
+                        show_link_done('http://carrotstore.com/phpqrcode/img_link/171.png', inp_link);
+                    });
+                });
+            } else {
+                /*
+                $.ajax({
+                    url: url_act,
+                    jsonp: "create_link",
+                    type: "post",
+                    data: "function=create_link&id_device="+id_device+"&link="+encodeURI(inp_link),
+                    success: function(data_link, textStatus, jqXHR)
+                    {
+                        var link_obj=JSON.parse(data_link);
+                        show_link_done(link_obj.qr,link_obj.link_detail);
+                        $("#loading").fadeOut(200);
+                    }
+                });*/
+            }
+        }else{
+            error_link.style.display="block";
+        }
     });
     body_main.innerHTML="";
     body_main.appendChild(label_link);
+    body_main.appendChild(error_link);
     body_main.appendChild(inp_link);
     body_main.appendChild(btn_create_link);
-    show_list_link();
     check_and_show_login();
     show_lang();
 }
@@ -83,7 +106,7 @@ function  show_list_link() {
         area_list_link.innerHTML="";
         for(var i=0;i<data_l.length;i++){
             var btn_delete=document.createElement("button");
-            btn_delete.innerHTML="Delete";
+            btn_delete.innerHTML='<i class="fa fa-trash-o"></i>';
             btn_delete.classList.add("buttonPro");
             btn_delete.classList.add("red");
             btn_delete.classList.add("small");
@@ -101,21 +124,40 @@ function  show_list_link() {
     });
 }
 
+function  show_list_link_by_account() {
+    $.ajax({
+        url: url_act,
+        jsonp: "show_list_link_by_account",
+        type: "post",
+        data: "function=show_list_link_by_account&lang="+lang+"&user_phone="+id_device,
+        success: function(data, textStatus, jqXHR)
+        {
+            alert(data);
+        }
+    });
+}
+
 function show_login_account() {
     var line=document.createElement("div");
     line.classList.add('line');
     var label_phone=document.createElement("label");
-    label_phone.innerHTML="Số điện thoại";
+    label_phone.innerHTML="Phone number";
     label_phone.classList.add('label');
     label_phone.setAttribute("val","account_phone");
     label_phone.classList.add("lang");
+    var login_error=document.createElement("strong");
+    login_error.innerHTML="Login failed, please check your password";
+    login_error.classList.add("error");
+    login_error.classList.add("lang");
+    login_error.setAttribute("val","account_login_fail");
     var inp_phone=document.createElement("input");
     inp_phone.setAttribute("id","user_phone");
     inp_phone.setAttribute("type","text");
     inp_phone.classList.add("inp");
-    inp_phone.setAttribute("placeholder","Nhập số điện thoại của bạn...");
+    inp_phone.classList.add("pl");
+    inp_phone.setAttribute("placeholder","Enter data here ...");
     var label_password=document.createElement("label");
-    label_password.innerHTML="Mật khẩu";
+    label_password.innerHTML="Password";
     label_password.classList.add("lang");
     label_password.classList.add('label');
     label_password.setAttribute("val","password");
@@ -123,7 +165,8 @@ function show_login_account() {
     inp_password.setAttribute("id","user_password");
     inp_password.setAttribute("type","password");
     inp_password.classList.add("inp");
-    inp_password.setAttribute("placeholder","Nhập mật khẩu vào đây...");
+    inp_password.classList.add("pl");
+    inp_password.setAttribute("placeholder","Enter data here ...");
     var btn_login=document.createElement("button");
     btn_login.classList.add("buttonPro");
     btn_login.classList.add("green");
@@ -131,7 +174,29 @@ function show_login_account() {
     btn_login.setAttribute('val','completed');
     btn_login.innerHTML="Completed";
     btn_login.addEventListener('click',function () {
-        login_account($("#user_phone").val(),$("#user_password").val());
+        $("#loading").fadeIn(200);
+        $.ajax({
+            url: url_act,
+            jsonp: "logincallback",
+            type: "post",
+            data: "function=logincallback&lang="+lang+"&user_phone="+$("#user_phone").val()+"&user_password="+$("#user_password").val(),
+            success: function(data, textStatus, jqXHR)
+            {
+                $("#loading").fadeOut(200);
+                if(data=="none"){
+                    login_error.style.display="block";
+                }else {
+                    var obj_user = JSON.parse(data);
+                    chrome.storage.local.set({data_user: obj_user}, function () {
+                        console.log(obj_user);
+                        show_main();
+                    });
+                    toDataURL(obj_user.avatar,function(dataUrl) {
+                        chrome.storage.local.set({data_img_avatar:dataUrl}, function () {})
+                    });
+                }
+            }
+        });
     });
     var btn_back=document.createElement("button");
     btn_back.classList.add("buttonPro");
@@ -146,38 +211,23 @@ function show_login_account() {
     area_list_link.innerHTML="";
     body_main.innerHTML="<strong class='lang' val='account_login'>Đăng nhập</strong>";
     body_main.appendChild(label_phone);
+    body_main.appendChild(login_error);
     body_main.appendChild(inp_phone);
     body_main.appendChild(label_password);
     body_main.appendChild(inp_password);
     body_main.appendChild(line);
     area_login.innerHTML="";
-    area_login.appendChild(btn_back);
     area_login.appendChild(btn_login);
+    area_login.appendChild(btn_back);
     show_lang();
 }
 
-function login_account(user_phone,user_password) {
-    $("#loading").fadeIn(200);
-    $.ajax({
-        url: url_act,
-        jsonp: "logincallback",
-        type: "post",
-        data: "function=logincallback&lang="+lang+"&user_phone="+user_phone+"&user_password="+user_password,
-        success: function(data, textStatus, jqXHR)
-        {
-            $("#loading").fadeOut(200);
-            var obj_user=JSON.parse(data);
-            chrome.storage.local.set({data_user: obj_user}, function () {
-                console.log(obj_user);
-                show_main();
-            });
-        }
-    });
-}
+
 
 function check_and_show_login() {
     chrome.storage.local.get('data_user', function (result) {
         var obj_user=result.data_user;
+        area_login.innerHTML="";
         if(obj_user) {
             var btn_logout=document.createElement("button");
             btn_logout.classList.add("buttonPro");
@@ -190,10 +240,28 @@ function check_and_show_login() {
                 logout_account();
             });
             id_device=obj_user.id_device;
-            area_login.innerHTML = "<img src='images/pic_contact.png' class='user_avatar'/><strong>" + obj_user.name+"</strong><br/>";
-            if(obj_user.address!="") area_login.innerHTML =area_login.innerHTML+""+obj_user.address+"<br/>";
-            if(obj_user.sdt!="") area_login.innerHTML =area_login.innerHTML+""+obj_user.sdt+"<br/>";
+
+            var avatar_user=document.createElement("img");
+            avatar_user.setAttribute("src","images/pic_contact.png");
+            avatar_user.classList.add('user_avatar');
+            img_avatar=avatar_user;
+            area_login.appendChild(avatar_user);
+            var name_user=document.createElement("strong");
+            name_user.innerHTML=obj_user.name;
+            name_user.style.display="block";
+            area_login.appendChild(name_user);
+            var name_address=document.createElement("span");
+            name_address.innerHTML=obj_user.address;
+            name_address.style.display="block";
+            var name_sdt=document.createElement("span");
+            name_sdt.innerHTML=obj_user.sdt;
+            name_sdt.style.display="block";
+            if(obj_user.address!="")area_login.appendChild(name_address);
+            if(obj_user.sdt!="")area_login.appendChild(name_sdt);
+
             area_login.appendChild(btn_logout);
+            show_list_link_by_account();
+            load_img_avatar();
         }else{
             var line=document.createElement("div");
             line.classList.add('line');
@@ -209,6 +277,7 @@ function check_and_show_login() {
             line.appendChild(btn_login);
             area_login.innerHTML="<img  src='images/logo.png' class='logo_login'/> <span class='lang' val='btn_login_google'>Đăng nhập bằng tài khoản carrot để quản lý các liên kết rút gọn của bạn</span>";
             area_login.appendChild(line);
+            show_list_link();
         }
     });
 }
@@ -249,11 +318,16 @@ function show_select_lang(){
                 name_lang.innerHTML=list_country[i].name;
                 item_lang.setAttribute("lang_key",list_country[i].key);
                 item_lang.setAttribute("url_icon",list_country[i].url);
+                item_lang.setAttribute("icon",list_country[i].icon);
                 item_lang.appendChild(name_lang);
                 item_lang.addEventListener("click", function () {
                     $("#loading").fadeIn(200);
                     var key_lang=this.getAttribute('lang_key');
+                    lang=key_lang;
                     btn_lang.setAttribute("src",this.getAttribute('url_icon'));
+                    toDataURL(this.getAttribute('icon'),function(dataUrl) {
+                        chrome.storage.local.set({data_img_lang:dataUrl}, function () {})
+                    });
                     $.ajax({
                         url: url_act,
                         jsonp: "download_lang",
@@ -272,6 +346,7 @@ function show_select_lang(){
                 body_main.appendChild(item_lang);
             }
             area_login.innerHTML="";
+            area_list_link.innerHTML="";
             var btn_back=document.createElement("button");
             btn_back.classList.add("buttonPro");
             btn_back.classList.add("blue");
@@ -295,18 +370,32 @@ function show_lang() {
             var key_lang=$(this).attr('val');
             $(this).html(obj_data_lang[key_lang]);
         });
+        $(".pl").each(function () {
+            $(this).attr('placeholder',obj_data_lang['inp_tip']);
+        });
     });
 }
 
-function  show_link_done() {
+function  show_link_done(url_img,link) {
     var label_link_done=document.createElement("label");
     label_link_done.innerHTML="You can use the link below to replace the old link";
     label_link_done.classList.add('label');
     label_link_done.setAttribute("val","link_done_tip");
     label_link_done.classList.add("lang");
+    var line_link=document.createElement("div");
+    line_link.classList.add("line");
+    var img_qr=document.createElement("img");
+    img_qr.setAttribute("src",url_img);
+    var link_act=document.createElement("a");
+    link_act.innerHTML=link;
+    link_act.classList.add("link");
+    link_act.setAttribute("href",link);
+    line_link.appendChild(link_act);
     body_main.innerHTML="";
     area_list_link.innerHTML="";
     body_main.appendChild(label_link_done);
+    body_main.appendChild(line_link);
+    body_main.appendChild(img_qr);
     area_login.innerHTML="";
     var btn_back=document.createElement("button");
     btn_back.classList.add("buttonPro");
@@ -319,4 +408,47 @@ function  show_link_done() {
     });
     area_login.appendChild(btn_back);
     show_lang();
+}
+
+function isValidURL(string) {
+    var res = string.match(/(http(s)?:\/\/.)?(www\.)?[-a-zA-Z0-9@:%._\+~#=]{2,256}\.[a-z]{2,6}\b([-a-zA-Z0-9@:%_\+.~#?&//=]*)/g);
+    return (res !== null)
+};
+
+function toDataURL(src, callback, outputFormat) {
+    var img = new Image();
+    img.crossOrigin = 'Anonymous';
+    img.onload = function() {
+        var canvas = document.createElement('CANVAS');
+        var ctx = canvas.getContext('2d');
+        var dataURL;
+        canvas.height = this.naturalHeight;
+        canvas.width = this.naturalWidth;
+        ctx.drawImage(this, 0, 0);
+        dataURL = canvas.toDataURL(outputFormat);
+        callback(dataURL);
+    };
+    img.src = src;
+    if (img.complete || img.complete === undefined) {
+        img.src = "data:image/gif;base64,R0lGODlhAQABAIAAAAAAAP///ywAAAAAAQABAAACAUwAOw==";
+        img.src = src;
+    }
+}
+
+function load_img_lang() {
+    chrome.storage.local.get({data_img_lang: []}, function (result) {
+        if(result.data_img_lang) {
+            btn_lang.setAttribute("src", result.data_img_lang);
+        }
+    });
+}
+
+function  load_img_avatar() {
+    chrome.storage.local.get({data_img_avatar: []}, function (result) {
+        if(result.data_img_avatar) {
+            if(img_avatar!=null) {
+                img_avatar.setAttribute("src", result.data_img_avatar);
+            }
+        }
+    });
 }
