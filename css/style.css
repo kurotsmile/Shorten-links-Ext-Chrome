@@ -1,0 +1,93 @@
+#contain{
+    width: 300px;
+    height: 500px;
+    background-color: white;
+    text-align: center;
+    margin: 0px;padding: 0px;
+    float: left;
+}
+
+#contain .title{
+    width: 100%;
+    background: linear-gradient(-120deg,#fff,#fff,#e9ffd4,#d7ffa6,#9cf769);
+    padding-top: 10px;
+    padding-bottom: 10px;
+    font-size: 20px;font-weight: bold;
+    float: left;
+}
+
+#contain .body{
+    padding-top: 20px;
+    padding-bottom: 20px;
+    width: 100%;
+    float: left;
+}
+
+#contain .footer {
+    margin-top: 5px;
+    border-top: solid 2px green;
+    padding-top: 20px;
+    padding-bottom: 20px;
+    float: left;
+    width: 100%;
+}
+.inp_link,.inp{
+    border: solid 3px #ced0d0;
+    float: left;
+    width: 281px;
+    margin-top: 10px;
+    margin-bottom: 10px;
+    border-radius: 6px;
+    height: 25px;
+    background-color: #e2ffe6;
+    padding: 6px;
+}
+
+.btn_create{
+    background-color: #cafdad;
+    border: solid 2px #90dc90;
+    margin-top: 13px;
+    cursor: pointer;
+}
+
+#list_link{
+    width: 100%;float: left;
+}
+
+#list_link .item{
+    width: 100%;float: left;text-align: left;border-bottom: solid 1px #9cc1d2;
+}
+.item .btn_delete{
+    float: right;
+}
+
+.label{
+    width: 100%;float: left;text-align: center;
+}
+#login{
+    float: left;width: 100%;padding-top: 20px;padding-bottom: 20px;
+    background-color: #e9f5ff;
+    border-radius: 8px;
+}
+.logo_login{float: left;width: 80px;}
+#loading{
+    position: absolute;
+    top: 0px;
+    bottom: 0px;
+    left: 0px;
+    right: 0px;
+    background-color: #3a776361;
+    padding-top: 50%;
+    display: none;
+}
+#loading img{border-radius: 50px;}
+.line{float: left;width: 100%;}
+.user_avatar{float: left;margin-right: 5px;border-radius: 10px;width: 40px;height: 40px;margin-left: 5px;}
+#img_lang{float: right;width: 20px;height: 20px;cursor: pointer;}
+.item_lang{width: 100%;float: left;cursor: pointer;}
+.item_lang img{
+    width: 20px;float: left;
+}
+.item_lang:hover{
+    background-color: #ffe8a3;
+}
