@@ -4,17 +4,26 @@ var lang='en';
 var area_login=null;
 var area_list_link=null;
 var body_main=null;
+var area_footer=null;
 var id_device='';
 var btn_lang=null;
 var img_avatar=null;
 
 $(function () {
+    chrome.storage.local.get('lang_app', function (result) {
+        if(result.lang_app!=''){
+            lang=result.lang_app['lang'];
+        };
+    });
+
     body_main=document.querySelectorAll("#body_main");
     body_main=body_main[0];
     area_login=document.querySelectorAll("#login");
     area_login=area_login[0];
     area_list_link=document.querySelectorAll("#list_link");
     area_list_link=area_list_link[0];
+    area_footer=document.querySelectorAll("#footer");
+    area_footer=area_footer[0];
     btn_lang=document.querySelectorAll("#img_lang");
     btn_lang=btn_lang[0];
     btn_lang.addEventListener('click',function () {
@@ -50,32 +59,43 @@ function show_main(){
     btn_create_link.setAttribute("val","create_link_shortened");
     btn_create_link.addEventListener('click',function () {
         var inp_link=$("#inp_link").val();
+        $("#loading").fadeIn(200);
         if(isValidURL(inp_link)) {
             if (id_device == "") {
-                chrome.storage.local.get({list_link: []}, function (result) {
-                    var data_lik = result.list_link;
-                    data_lik.push({'link': inp_link, HasBeenUploadedYet: false});
-                    chrome.storage.local.set({list_link: data_lik}, function () {
-                        show_link_done('http://carrotstore.com/phpqrcode/img_link/171.png', inp_link);
-                    });
-                });
-            } else {
-                /*
                 $.ajax({
                     url: url_act,
                     jsonp: "create_link",
                     type: "post",
-                    data: "function=create_link&id_device="+id_device+"&link="+encodeURI(inp_link),
+                    data: "function=create_link&id_device="+id_device+"&link="+encodeURI(inp_link)+"&lang="+lang,
+                    success: function(data_link, textStatus, jqXHR)
+                    {
+                        var link_obj=JSON.parse(data_link);
+                        show_link_done(link_obj.qr,link_obj.link_detail);
+                        $("#loading").fadeOut(200);
+                        chrome.storage.local.get({list_link: []}, function (result) {
+                            var data_lik = result.list_link;
+                            data_lik.push({'link': inp_link, HasBeenUploadedYet: false});
+                            chrome.storage.local.set({list_link: data_lik}, function () {});
+                        });
+                    }
+                });
+            } else {
+                $.ajax({
+                    url: url_act,
+                    jsonp: "create_link",
+                    type: "post",
+                    data: "function=create_link&id_device="+id_device+"&link="+encodeURI(inp_link)+"&lang="+lang,
                     success: function(data_link, textStatus, jqXHR)
                     {
                         var link_obj=JSON.parse(data_link);
                         show_link_done(link_obj.qr,link_obj.link_detail);
                         $("#loading").fadeOut(200);
                     }
-                });*/
+                });
             }
         }else{
             error_link.style.display="block";
+            $("#loading").fadeOut(200)
         }
     });
     body_main.innerHTML="";
@@ -84,6 +104,7 @@ function show_main(){
     body_main.appendChild(inp_link);
     body_main.appendChild(btn_create_link);
     check_and_show_login();
+    show_footer();
     show_lang();
 }
 
@@ -125,14 +146,73 @@ function  show_list_link() {
 }
 
 function  show_list_link_by_account() {
+    area_list_link.innerHTML="<img src='images/waiting.gif'/>";
     $.ajax({
         url: url_act,
         jsonp: "show_list_link_by_account",
         type: "post",
-        data: "function=show_list_link_by_account&lang="+lang+"&user_phone="+id_device,
+        data: "function=show_list_link_by_account&lang="+lang+"&id_device="+id_device,
         success: function(data, textStatus, jqXHR)
         {
-            alert(data);
+            area_list_link.innerHTML="";
+            var list_link=JSON.parse(data);
+            for (var i=0;i<list_link.length;i++){
+                var link_full=document.createElement("a");
+                link_full.innerHTML=list_link[i].url;
+                link_full.style.display="block";
+                link_full.style.fontWeight="bold";
+                link_full.style.cursor="pointer";
+                link_full.addEventListener('click',function () {
+                    window.open(this.innerHTML);
+                });
+                var link_cr=document.createElement("a");
+                link_cr.innerHTML=list_link[i].link;
+                link_cr.style.display="block";
+                var btn_delete=document.createElement("button");
+                btn_delete.innerHTML='<i class="fa fa-trash-o"></i>';
+                btn_delete.classList.add("buttonPro");
+                btn_delete.classList.add("red");
+                btn_delete.classList.add("small");
+                btn_delete.classList.add("btn_delete");
+                btn_delete.setAttribute("id_link",list_link[i].id);
+                btn_delete.addEventListener('click',function () {
+                    delete_link_by_account(this.getAttribute("id_link"));
+                });
+                var btn_detail=document.createElement("button");
+                btn_detail.innerHTML='<i class="fa fa-info" aria-hidden="true"></i>';
+                btn_detail.classList.add("buttonPro");
+                btn_detail.classList.add("blue");
+                btn_detail.classList.add("small");
+                btn_detail.classList.add("btn_delete");
+                btn_detail.setAttribute("detail",list_link[i].detail);
+                btn_detail.addEventListener('click',function () {
+                    window.open(this.getAttribute("detail"));
+                });
+
+                var item_link = document.createElement("div");
+                item_link.appendChild(btn_delete);
+                item_link.appendChild(btn_detail);
+                item_link.appendChild(link_full);
+                item_link.appendChild(link_cr);
+                item_link.classList.add("item");
+                area_list_link.appendChild(item_link);
+            }
+
+        }
+    });
+}
+
+function delete_link_by_account(id_link) {
+    $("#loading").fadeIn(200);
+    $.ajax({
+        url: url_act,
+        jsonp: "delete_link_by_account",
+        type: "post",
+        data: "function=delete_link_by_account&lang="+lang+"&id_device="+id_device+"&id_link="+id_link,
+        success: function(data, textStatus, jqXHR)
+        {
+            $("#loading").fadeOut(200);
+            show_list_link_by_account();
         }
     });
 }
@@ -245,6 +325,9 @@ function check_and_show_login() {
             avatar_user.setAttribute("src","images/pic_contact.png");
             avatar_user.classList.add('user_avatar');
             img_avatar=avatar_user;
+            avatar_user.addEventListener('click',function () {
+                window.open(obj_user.link);
+            });
             area_login.appendChild(avatar_user);
             var name_user=document.createElement("strong");
             name_user.innerHTML=obj_user.name;
@@ -437,7 +520,7 @@ function toDataURL(src, callback, outputFormat) {
 
 function load_img_lang() {
     chrome.storage.local.get({data_img_lang: []}, function (result) {
-        if(result.data_img_lang) {
+        if(result.data_img_lang!="") {
             btn_lang.setAttribute("src", result.data_img_lang);
         }
     });
@@ -445,10 +528,52 @@ function load_img_lang() {
 
 function  load_img_avatar() {
     chrome.storage.local.get({data_img_avatar: []}, function (result) {
-        if(result.data_img_avatar) {
+        if(result.data_img_avatar!="") {
             if(img_avatar!=null) {
                 img_avatar.setAttribute("src", result.data_img_avatar);
             }
         }
     });
+}
+
+function show_footer() {
+    area_footer.innerHTML="";
+    var link_store=document.createElement("strong");
+    link_store.innerHTML="Carrotstore.com";
+    link_store.classList.add('label');
+    link_store.classList.add('lang');
+    link_store.style.cursor="pointer";
+    link_store.addEventListener('click',function () {
+        window.open("https://carrotstore.com/");
+    });
+    var label_other_app=document.createElement("label");
+    label_other_app.innerHTML="Other application";
+    label_other_app.classList.add("lang");
+    label_other_app.setAttribute("val","other_app");
+    area_footer.appendChild(link_store);
+    area_footer.appendChild(label_other_app);
+    var box_ads=document.createElement("div");
+    box_ads.classList.add("line");
+    box_ads.classList.add("ads");
+    $.ajax({
+        url: url_act,
+        jsonp: "other_app",
+        type: "post",
+        data: "function=other_app&lang="+lang,
+        success: function(data_app, textStatus, jqXHR)
+        {
+            var list_app=JSON.parse(data_app);
+            for (var i=0;i<list_app.length;i++){
+                var item_ads=document.createElement("img");
+                item_ads.setAttribute("src",list_app[i].id);
+                item_ads.setAttribute("link",list_app[i].url);
+                item_ads.addEventListener('click',function () {
+                    window.open(this.getAttribute("link"));
+                });
+                box_ads.appendChild(item_ads);
+            }
+            area_footer.appendChild(box_ads);
+        }
+    });
+
 }

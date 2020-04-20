@@ -1,6 +1,6 @@
 #contain{
     width: 300px;
-    height: 500px;
+    height: 550px;
     background-color: white;
     text-align: center;
     margin: 0px;padding: 0px;
@@ -83,19 +83,15 @@
 #loading img{border-radius: 50px;}
 .line{float: left;width: 100%;}
 .line .link{font-size: 15px;font-weight: bold;}
-.user_avatar{float: left;margin-right: 5px;border-radius: 10px;width: 40px;height: 40px;margin-left: 5px;}
+.line.ads{margin-top: 20px;}
+.line.ads img{border-radius: 20px;margin: 2px;transition: all 2s inherit;cursor: pointer;}
+.line.ads img:hover{transform: scale(1.1,1.1)}
+.user_avatar{float: left;margin-right: 5px;border-radius: 10px;width: 40px;height: 40px;margin-left: 5px;cursor: pointer}
 #img_lang{float: right;width: 35px;height:35px;cursor: pointer;}
 .item_lang{
-    width: 100%;
-    float: left;
-    cursor: pointer;
+    width: 100%;float: left;cursor: pointer;
     background: linear-gradient(-120deg,#fff,#fff,#e9ffd4,#d7ffa6,#9cf769);
-    color: black;
-    text-align: left;
-    padding-bottom: 3px;
-    padding-top: 2px;
-    border-radius: 20px;
-    margin-bottom: 3px;
+    color: black;text-align: left;padding-bottom: 3px;padding-top: 2px;border-radius: 20px;margin-bottom: 3px;
 }
 .item_lang:hover{
     background: linear-gradient(-120deg,#fff,#fff, #ffeaae, #ffcd8d,#9cf769);

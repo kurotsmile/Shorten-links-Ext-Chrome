@@ -12,5 +12,8 @@
     "default_icon": "images/icon16.png",
     "default_popup": "popup.html"
   },
-  "permissions": ["notifications","storage","https://carrotstore.com/"]
+  "permissions": ["notifications","storage","https://carrotstore.com/","contextMenus"],
+  "background": {
+    "scripts": ["js/background.js"]
+  }
 }
