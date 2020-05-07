@@ -2,7 +2,7 @@
   "manifest_version": 2,
   "name": "Shorten links",
   "version": "1.0",
-  "description": "Shortening link application, helping you to have short and beautiful links easily shared with everyone. Advantages of the application can manage the links created with google and account show QR code after creating short link. The application provides multiple visual display languages to make the interaction process easier",
+  "description": "Shortening link application, helping you to have short and beautiful links easily shared with everyone",
   "icons": {
     "128": "images/icon128.png",
     "48": "images/icon48.png",
@@ -12,8 +12,5 @@
     "default_icon": "images/icon16.png",
     "default_popup": "popup.html"
   },
-  "permissions": ["notifications","storage","https://carrotstore.com/","contextMenus"],
-  "background": {
-    "scripts": ["js/background.js"]
-  }
+  "permissions": ["storage","https://carrotstore.com/"]
 }
